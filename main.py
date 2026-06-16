@@ -1,12 +1,17 @@
 from dotenv import load_dotenv
 import os
 import requests
+import json
 
 load_dotenv()
 
 api_key = os.environ.get("GROQ_API_KEY")
 
 messages = []
+
+if os.path.exists("memory.json"):
+    with open("memory.json", "r") as file:
+        messages = json.load(file)
 
 while True:
     user_input = input("You: ")
@@ -29,5 +34,8 @@ while True:
     reply = data["choices"][0]["message"]["content"]
 
     messages.append({"role": "assistant", "content": reply})
+
+    with open("memory.json", "w") as file:
+        json.dump(messages, file)
 
     print(f"\nJarvis: {reply}\n")
