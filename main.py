@@ -9,9 +9,11 @@ api_key = os.environ.get("GROQ_API_KEY")
 
 messages = []
 
-if os.path.exists("memory.json"):
+try:
     with open("memory.json", "r") as file:
         messages = json.load(file)
+except (json.JSONDecodeError, FileNotFoundError):
+    pass
 
 while True:
     user_input = input("You: ")
