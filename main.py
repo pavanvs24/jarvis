@@ -20,4 +20,8 @@ response = requests.post(
     }
 )
 
-print(response.json())
+data = response.json()
+
+reply = data["choices"][0]["message"]["content"]
+
+print(reply)
