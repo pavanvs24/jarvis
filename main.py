@@ -1,1 +1,7 @@
-print("Hello, sir.")
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+api_key = os.environ.get("GROK_API_KEY")
+print(api_key)
