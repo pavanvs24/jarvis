@@ -4,12 +4,16 @@ import requests
 import json
 from memory import load_memory, save_memory
 from tools import get_weather
+from voice import listen, speak
 
 load_dotenv()
 
 api_key = os.environ.get("GROQ_API_KEY")
 
-system_prompt = "You are a helpful personal assistant. When the user asks about weather in any city, do not reply normally. Instead reply with exactly: WEATHER:cityname. Replace the cityname with the city they mentioned"
+system_prompt = """You are Jarvis, a helpful and conversational personal assistant. 
+Talk naturally and helpfully in response to anything the user says.
+The ONLY exception: if the user asks about weather in a specific city, respond with exactly WEATHER:cityname and nothing else.
+For everything else, respond normally like a helpful assistant."""
 
 conversation_history = load_memory()
 
@@ -17,15 +21,17 @@ def check_tools(reply):
     if reply.startswith("WEATHER:"):
         city = reply.split(":")[1]
         weather_info = get_weather(city)
-        print(f"\nJarvis: {weather_info}\n")
         conversation_history.append({"role": "assistant", "content": weather_info})
         save_memory(conversation_history)
+        print(f"\nJarvis: {weather_info}\n")
+        speak(weather_info)
         return True
 
     return False
 
 while True:
-    user_input = input("You: ")
+    user_input = listen()
+    print(f"You: {user_input}")
 
     conversation_history.append({"role": "user", "content": user_input})
 
@@ -51,3 +57,4 @@ while True:
     save_memory(conversation_history)
 
     print(f"\nJarvis: {reply}\n")
+    speak(reply)
