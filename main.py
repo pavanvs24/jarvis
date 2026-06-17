@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 import os
 import requests
 import json
+from memory import load_memory, save_memory
+from tools import get_weather
 
 load_dotenv()
 
@@ -9,31 +11,18 @@ api_key = os.environ.get("GROQ_API_KEY")
 
 system_prompt = "You are a helpful personal assistant. When the user asks about weather in any city, do not reply normally. Instead reply with exactly: WEATHER:cityname. Replace the cityname with the city they mentioned"
 
-conversation_history = []
+conversation_history = load_memory()
 
-try:
-    with open("memory.json", "r") as file:
-        conversation_history = json.load(file)
-except (json.JSONDecodeError, FileNotFoundError):
-    pass
+def check_tools(reply):
+    if reply.startswith("WEATHER:"):
+        city = reply.split(":")[1]
+        weather_info = get_weather(city)
+        print(f"\nJarvis: {weather_info}\n")
+        conversation_history.append({"role": "assistant", "content": weather_info})
+        save_memory(conversation_history)
+        return True
 
-def get_weather(city):
-    geo = requests.get(f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1")
-    geo_data = geo.json()
-
-    if "results" not in geo_data or len(geo_data["results"]) == 0:
-        return f"Sorry, I couldn't find weather data for {city}."
-
-    lat = geo_data["results"][0]["latitude"]
-    lon = geo_data["results"][0]["longitude"]
-
-    weather = requests.get(f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true")
-    weather_data = weather.json()
-
-    temp = weather_data["current_weather"]["temperature"]
-    windspeed = weather_data["current_weather"]["windspeed"]
-
-    return f"Temperature in {city}: {temp}°C, Wind speed: {windspeed} km/h"
+    return False
 
 while True:
     user_input = input("You: ")
@@ -55,16 +44,10 @@ while True:
     data = response.json()
     reply = data["choices"][0]["message"]["content"]
 
-    if reply.startswith("WEATHER:"):
-        city = reply.split(":")[1]
-        weather_info = get_weather(city)
-        print(f"\nJarvis: {weather_info}\n")
-        conversation_history.append({"role": "assistant", "content": weather_info})
+    if check_tools(reply):
         continue
 
     conversation_history.append({"role": "assistant", "content": reply})
-
-    with open("memory.json", "w") as file:
-        json.dump(conversation_history, file)
+    save_memory(conversation_history)
 
     print(f"\nJarvis: {reply}\n")
