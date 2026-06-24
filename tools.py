@@ -61,3 +61,32 @@ def read_notes():
 
     except (FileNotFoundError):
         return None
+
+def delete_note(note):
+    try:
+        with open("notes.txt", "r") as file:
+            lines = file.readlines()
+            content = "".join(lines)
+            if content.strip() == "":
+                return "NoNotes"
+
+    except FileNotFoundError:
+        return "NoNotes"
+    
+    if note == "all":
+        with open("notes.txt", "w") as file:
+            return "ALL"
+
+    note = int(note)
+    if note > len(lines) or note < 1:
+        return "InvalidNoteNumber"
+
+    result = lines[note - 1] 
+    del lines[note - 1]
+
+    with open("notes.txt", "w") as file:
+        file.writelines(lines)
+        return result
+    
+    return False
+

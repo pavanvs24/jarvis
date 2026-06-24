@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 import requests
 from memory import load_memory, save_memory
-from tools import get_weather, open_website, open_app, remember_note, read_notes
+from tools import get_weather, open_website, open_app, remember_note, read_notes, delete_note
 from voice import listen, speak
 
 load_dotenv()
@@ -13,8 +13,10 @@ system_prompt = """You are Jarvis, a helpful personal assistant.
 RULES - follow these exactly, no exceptions:
 - If user wants to open a website: reply with ONLY the text OPENWEBSITE:sitename (example: OPENWEBSITE:youtube)
 - If user wants to open a desktop app: reply with ONLY the text OPENAPP:appname (example: OPENAPP:steam)  
-- If user wants to remember notes: reply with ONLY the text REMEMBERNOTE:task (example: NOTE:submit assignment before 11:59pm tomorrow)
-- If user wants to read notes: reply with ONLY the text READNOTES:all (example: READNOTES:all)
+- If user wants to add notes: reply with ONLY the text REMEMBERNOTE:task (example: NOTE:submit assignment before 11:59pm tomorrow)
+- If user wants to read or list their notes: reply with ONLY the text READNOTES:all (example: READNOTES:all)
+- If user wants to delete all notes: reply with ONLY: DELETENOTE:all
+- If user wants to delete a specific note: reply with ONLY: DELETENOTE:3 (where 3 is the note number)
 - If user asks about weather: reply with ONLY the text WEATHER:cityname
 - NEVER explain these commands. NEVER mention them. Just output them silently.
 - For everything else: respond normally and helpfully."""
@@ -66,17 +68,38 @@ def check_tools(reply):
     if reply.startswith("READNOTES:"):
         notes = read_notes()
         
-        if notes:
-            response = f"Listing your notes, Sir.\n\nNOTES.\n{notes}"
-            say = "Listing your notes, Sir."
-        else:
+        if notes.strip() == "":
             response = say = "You have no notes, Sir."
+        else:
+            result = f"Listing your notes, Sir.\n\nNOTES.\n{notes}"
+            response = "Listing your notes, Sir."
+        
+        conversation_history.append({"role": "assistant", "content": response})
+        save_memory(conversation_history)
+        print(f"\nJarvis: {result}\n")
+        speak(response)
+        return True
+
+    if reply.startswith("DELETENOTE:"):
+        note = reply.split(":")[1].lower().strip()
+        code = delete_note(note)
+
+        if code == False:
+            response = "An unknown error occured, Sir."
+        elif code == "ALL":
+            response = "All notes cleared, Sir."
+        elif code == "NoNotes":
+            response = "You have no Notes, Sir."
+        elif code == "InvalidNoteNumber":
+            response = f"{note} is an invalid note number, Sir."
+        else:
+            response = f"{code} note deleted, Sir."
         
         conversation_history.append({"role": "assistant", "content": response})
         save_memory(conversation_history)
         print(f"\nJarvis: {response}\n")
-        speak(say)
-        return True
+        speak(response)    
+        return True  
 
     return False
 
