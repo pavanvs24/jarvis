@@ -1,4 +1,8 @@
 import requests
+from config import APP_PATHS, SITE_URLS
+import webbrowser
+import shutil
+import subprocess
 
 def get_weather(city):
     geo = requests.get(f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1")
@@ -17,3 +21,31 @@ def get_weather(city):
     windspeed = weather_data["current_weather"]["windspeed"]
 
     return f"Temperature in {city}: {temp}°C, Wind speed: {windspeed} km/h"
+
+def open_website(sitename):
+    sitename = sitename.lower().strip()
+
+    if sitename in SITE_URLS:
+        webbrowser.open(SITE_URLS[sitename])
+        return
+
+    if "." in sitename:
+        site_url = f"https://{sitename}"
+    else:
+        site_url = f"https://{sitename}.com"
+    
+    webbrowser.open(site_url)
+
+def open_app(appname):
+    appname = appname.lower().strip()
+
+    if appname in APP_PATHS:
+        subprocess.Popen(APP_PATHS[appname])
+        return True
+
+    path = shutil.which(appname)
+    if path:
+        subprocess.Popen(path)
+        return True
+    
+    return False

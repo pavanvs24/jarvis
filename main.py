@@ -1,19 +1,21 @@
 from dotenv import load_dotenv
 import os
 import requests
-import json
 from memory import load_memory, save_memory
-from tools import get_weather
+from tools import get_weather, open_website, open_app
 from voice import listen, speak
 
 load_dotenv()
 
 api_key = os.environ.get("GROQ_API_KEY")
 
-system_prompt = """You are Jarvis, a helpful and conversational personal assistant. 
-Talk naturally and helpfully in response to anything the user says.
-The ONLY exception: if the user asks about weather in a specific city, respond with exactly WEATHER:cityname and nothing else.
-For everything else, respond normally like a helpful assistant."""
+system_prompt = """You are Jarvis, a helpful personal assistant.
+RULES - follow these exactly, no exceptions:
+- If user wants to open a website: reply with ONLY the text OPENWEBSITE:sitename (example: OPENWEBSITE:youtube)
+- If user wants to open a desktop app: reply with ONLY the text OPENAPP:appname (example: OPENAPP:steam)  
+- If user asks about weather: reply with ONLY the text WEATHER:cityname
+- NEVER explain these commands. NEVER mention them. Just output them silently.
+- For everything else: respond normally and helpfully."""
 
 conversation_history = load_memory()
 
@@ -25,6 +27,28 @@ def check_tools(reply):
         save_memory(conversation_history)
         print(f"\nJarvis: {weather_info}\n")
         speak(weather_info)
+        return True
+    
+    if reply.startswith("OPENWEBSITE:"):
+        sitename = reply.split(":")[1]
+        response = f"Opening {sitename}"
+        conversation_history.append({"role": "assistant", "content": response})
+        save_memory(conversation_history)
+        print(f"\nJarvis: {response}\n")
+        speak(response)
+        open_website(sitename)
+        return True
+
+    if reply.startswith("OPENAPP:"):
+        appname = reply.split(":")[1]
+        if open_app(appname):
+            response = f"Opening {appname}"
+        else:
+            response = f"Could not find {appname}"
+        conversation_history.append({"role": "assistant", "content": response})
+        save_memory(conversation_history)
+        print(f"\nJarvis: {response}\n")
+        speak(response)
         return True
 
     return False
