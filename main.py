@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 import requests
 from memory import load_memory, save_memory
-from tools import get_weather, open_website, open_app, remember_note, read_notes, delete_note
+from tools import get_weather, open_website, open_app, remember_note, read_notes, delete_note, monitor_system
 from voice import listen, speak
 
 load_dotenv()
@@ -18,6 +18,7 @@ RULES - follow these exactly, no exceptions:
 - If user wants to delete all notes: reply with ONLY: DELETENOTE:all
 - If user wants to delete a specific note: reply with ONLY: DELETENOTE:3 (where 3 is the note number)
 - If user asks about weather: reply with ONLY the text WEATHER:cityname
+- If user wants to monitor system info: reply with ONLY the text MONITORSYSTEM:info (example: MONITORSYSTEM:info)
 - NEVER explain these commands. NEVER mention them. Just output them silently.
 - For everything else: respond normally and helpfully."""
 
@@ -100,6 +101,21 @@ def check_tools(reply):
         print(f"\nJarvis: {response}\n")
         speak(response)    
         return True  
+
+    if reply.startswith("MONITORSYSTEM:"):
+        system_info = monitor_system()
+        cpu_percent = system_info["cpu_percent"]
+        ram_percent =  system_info["ram_percent"]
+        battery_percent =  system_info["battery_percent"]
+        charging = "Charging" if system_info["charging"] else "Not Charging"
+        disk_usage_percent = system_info["disk_usage_percent"]
+
+        response = f"Monitoring System Info...\nCPU: {cpu_percent}%\nRAM: {ram_percent}%\nBattery: {battery_percent}% {charging}\nDisk Usage: {disk_usage_percent}%"
+        conversation_history.append({"role": "assistant", "content": "Monitoring System Info..."})
+        save_memory(conversation_history)
+        print(f"\nJarvis: {response}\n")
+        speak(response)
+        return True
 
     return False
 

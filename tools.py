@@ -3,6 +3,7 @@ from config import APP_PATHS, SITE_URLS
 import webbrowser
 import shutil
 import subprocess
+import psutil
 
 def open_website(sitename):
     sitename = sitename.lower().strip()
@@ -90,3 +91,11 @@ def delete_note(note):
     
     return False
 
+def monitor_system():
+    system_info = {}
+    system_info["cpu_percent"] = psutil.cpu_percent()
+    system_info["ram_percent"] = psutil.virtual_memory().percent
+    system_info["battery_percent"] = psutil.sensors_battery().percent
+    system_info["charging"] = psutil.sensors_battery().power_plugged
+    system_info["disk_usage_percent"] = psutil.disk_usage('/').percent
+    return system_info
