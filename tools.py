@@ -133,3 +133,6 @@ def find_movie(movie):
         return os.path.join(folder, match)
     else:
         return None
+
+def search_song(song):
+    webbrowser.open(f"spotify:search:{song}")
