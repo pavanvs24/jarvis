@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 import requests
 from memory import load_memory, save_memory
-from tools import get_weather, open_website, open_app, remember_note, read_notes, delete_note, monitor_system, get_datetime
+from tools import search_brave ,get_weather, open_website, open_app, remember_note, read_notes, delete_note, monitor_system, get_datetime
 from voice import listen, speak
 
 load_dotenv()
@@ -24,6 +24,7 @@ MONITORSYSTEM:info          → user wants system stats (CPU, RAM, battery, disk
 DATETIME:time               → "what's the time", "time?", "what time is it", "current time"
 DATETIME:date               → "what's the date", "date?", "what day is it", "today's date"
 DATETIME:datetime           → user asks for both date and time
+SEARCHBRAVE:query           → user wants to search a query in a browser
 
 Never mention these commands. Never explain them. Just output them silently and immediately."""
 
@@ -135,6 +136,14 @@ def check_tools(reply):
     
         print(f"\nJarvis: {response}\n")
         speak(response)
+        return True
+
+    if reply.startswith("SEARCHBRAVE:"):
+        query = reply.split(":", 1)[1].strip()
+        response = f"Searching for {query}, Sir."
+        print(f"\nJarvis: {response}\n")
+        speak(response)
+        search_brave(query)
         return True
 
     return False

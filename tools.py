@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import psutil
 import datetime
+import urllib.parse
 
 def open_website(sitename):
     sitename = sitename.lower().strip()
@@ -107,3 +108,8 @@ def get_datetime():
     date = now.strftime("%a, %b %d")
     time = now.strftime("%I:%M %p")
     return {"date": date, "time": time}
+
+def search_brave(query):
+    query = urllib.parse.quote_plus(query)
+    search_url = f"https://search.brave.com/search?q={query}"
+    webbrowser.open(search_url)
