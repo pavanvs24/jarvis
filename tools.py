@@ -4,6 +4,7 @@ import webbrowser
 import shutil
 import subprocess
 import psutil
+import datetime
 
 def open_website(sitename):
     sitename = sitename.lower().strip()
@@ -99,3 +100,10 @@ def monitor_system():
     system_info["charging"] = psutil.sensors_battery().power_plugged
     system_info["disk_usage_percent"] = psutil.disk_usage('/').percent
     return system_info
+
+def get_datetime():
+    print("[Getting Datetime...]")
+    now = datetime.datetime.now()
+    date = now.strftime("%a, %b %d")
+    time = now.strftime("%I:%M %p")
+    return {"date": date, "time": time}
