@@ -6,6 +6,7 @@ import subprocess
 import psutil
 import datetime
 import urllib.parse
+import pyautogui
 
 def open_website(sitename):
     sitename = sitename.lower().strip()
@@ -113,3 +114,9 @@ def search_brave(query):
     query = urllib.parse.quote_plus(query)
     search_url = f"https://search.brave.com/search?q={query}"
     webbrowser.open(search_url)
+
+def take_screenshot():
+    image = pyautogui.screenshot()
+    now = datetime.datetime.now()
+    filename = now.strftime("screenshot_%Y%m%d_%H%M%S.png")
+    image.save(filename)
