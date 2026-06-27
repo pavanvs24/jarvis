@@ -1,5 +1,7 @@
+import os
 import requests
-from config import APP_PATHS, SITE_URLS
+from config import APP_PATHS, SITE_URLS, MEDIA_PATHS
+from rapidfuzz import process
 import webbrowser
 import shutil
 import subprocess
@@ -120,3 +122,14 @@ def take_screenshot():
     now = datetime.datetime.now()
     filename = now.strftime("screenshot_%Y%m%d_%H%M%S.png")
     image.save(filename)
+
+def find_movie(movie):
+    folder = MEDIA_PATHS['movies']
+    files = os.listdir(folder)
+    match, score, _ = process.extractOne(movie, files)
+    print(score)
+    
+    if score > 60:
+        return os.path.join(folder, match)
+    else:
+        return None

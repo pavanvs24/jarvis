@@ -7,3 +7,7 @@ APP_PATHS = {
 SITE_URLS = {
     "youtube": "https://youtube.com"
 }
+
+MEDIA_PATHS = {
+    "movies": "C:\\Users\\nirap\\Desktop\\mine\\Movies"
+}

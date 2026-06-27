@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import os
 import requests
 from memory import load_memory, save_memory
-from tools import take_screenshot, search_brave ,get_weather, open_website, open_app, remember_note, read_notes, delete_note, monitor_system, get_datetime
+from tools import find_movie, take_screenshot, search_brave ,get_weather, open_website, open_app, remember_note, read_notes, delete_note, monitor_system, get_datetime
 from voice import listen, speak
 
 load_dotenv()
@@ -26,6 +26,7 @@ DATETIME:date               → "what's the date", "date?", "what day is it", "t
 DATETIME:datetime           → user asks for both date and time
 SEARCHBRAVE:query           → user wants to search a query in a browser
 TAKESCREENSHOT:             → user wants to take a screenshot
+PLAYMOVIE:movie             → user wants to play a movie (e.g. PLAYMOVIE:interstellar)
 
 Never mention these commands. Never explain them. Just output them silently and immediately."""
 
@@ -152,6 +153,22 @@ def check_tools(reply):
         response = "Screenshot Taken, Sir."
         print(f"\nJarvis: {response}\n")
         speak(response)
+        return True
+
+    if reply.startswith("PLAYMOVIE:"):
+        movie = reply.split(":", 1)[1].strip()
+        movie_path = find_movie(movie)
+
+        if movie_path == None:
+            response = f"Could not find the movie {movie}, Sir."
+            print(f"\nJarvis: {response}\n")
+            speak(response)
+        else:
+            response = f"Playing Movie: {movie}, Sir."
+            print(f"\nJarvis: {response}\n")
+            speak(response)
+            os.startfile(movie_path)
+        
         return True
 
     return False
