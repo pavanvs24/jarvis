@@ -2,7 +2,12 @@ from dotenv import load_dotenv
 import os
 import requests
 from memory import load_memory, save_memory
-from tools import search_song, find_movie, take_screenshot, search_brave ,get_weather, open_website, open_app, remember_note, read_notes, delete_note, monitor_system, get_datetime
+from tools import (
+    search_song, find_movie, take_screenshot, 
+    search_brave, get_weather, open_website, open_app, 
+    remember_note, read_notes, delete_note, 
+    monitor_system, get_datetime
+)
 from voice import listen, speak
 
 load_dotenv()
@@ -182,9 +187,8 @@ def check_tools(reply):
     return False
 
 while True:
-    #user_input = listen()
-    #print(f"You: {user_input}")
-    user_input = input("You: ")
+    user_input = listen()
+    print(f"You: {user_input}")
 
     conversation_history.append({"role": "user", "content": user_input})
 

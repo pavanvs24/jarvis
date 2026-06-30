@@ -1,9 +1,9 @@
-#import whisper
-#import sounddevice as sd
-#import numpy as np
+import whisper
+import sounddevice as sd
+import numpy as np
 import pyttsx3
 
-#model = whisper.load_model("small")
+model = whisper.load_model("small")
 
 def listen():
     print("[Listening for 10 seconds...]")
