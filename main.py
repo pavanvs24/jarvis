@@ -115,11 +115,10 @@ def check_tools(reply):
         system_info = monitor_system()
         cpu_percent = system_info["cpu_percent"]
         ram_percent =  system_info["ram_percent"]
-        battery_percent =  system_info["battery_percent"]
+        battery_percent =  f"{system_info["battery_percent"]}%" if system_info["battery_percent"] else "No Battery"
         charging = "Charging" if system_info["charging"] else "Not Charging"
         disk_usage_percent = system_info["disk_usage_percent"]
-
-        response = f"Monitoring System Info...\nCPU: {cpu_percent}%\nRAM: {ram_percent}%\nBattery: {battery_percent}% {charging}\nDisk Usage: {disk_usage_percent}%"
+        response = f"Monitoring System Info...\nCPU: {cpu_percent}%\nRAM: {ram_percent}%\nBattery: {battery_percent} {charging}\nDisk Usage: {disk_usage_percent}%"
         print(f"\nJarvis: {response}\n")
         speak(response)
         return True

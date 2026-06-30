@@ -100,9 +100,10 @@ def monitor_system():
     system_info = {}
     system_info["cpu_percent"] = psutil.cpu_percent()
     system_info["ram_percent"] = psutil.virtual_memory().percent
-    system_info["battery_percent"] = psutil.sensors_battery().percent
-    system_info["charging"] = psutil.sensors_battery().power_plugged
-    system_info["disk_usage_percent"] = psutil.disk_usage('/').percent
+    system_info["disk_usage_percent"] = psutil.disk_usage('C:\\').percent
+    battery = psutil.sensors_battery()
+    system_info["battery_percent"] = battery.percent if battery else None
+    system_info["charging"] = battery.power_plugged if battery else None
     return system_info
 
 def get_datetime():
