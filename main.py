@@ -6,13 +6,14 @@ from tools import (
     search_song, find_movie, take_screenshot, 
     search_brave, get_weather, open_website, open_app, 
     remember_note, read_notes, delete_note, 
-    monitor_system, get_datetime
+    monitor_system, get_datetime, get_news
 )
 from voice import listen, speak
 
 load_dotenv()
 
 api_key = os.environ.get("GROQ_API_KEY")
+news_key = os.environ.get("NEWS_API_KEY")
 
 system_prompt = """You are Jarvis, a helpful personal assistant. Respond naturally and helpfully to everything.
 
@@ -34,7 +35,21 @@ TAKESCREENSHOT:             → user wants to take a screenshot
 PLAYMOVIE:movie             → user wants to play a movie (e.g. PLAYMOVIE:interstellar)
 PLAYSONG:song               → user wants to play a song (e.g. PLAYSONG:bohemian rhapsody)
 
-Never mention these commands. Never explain them. Just output them silently and immediately."""
+GETNEWS:endpoint:fromtime|totime:filters    → user wants news. Output ONLY the command, no text before or after.
+    - everything  → keyword search, historical news, date ranges, specific topics
+                    filters: q, sortBy(relevancy|popularity|publishedAt), language, domains, excludeDomains
+    - top-headlines → today's top news, country news, category-based news
+                    filters: q, country(e.g. 'us','in'), category(business|entertainment|health|science|sports|technology), sources, pageSize
+    Always use top-headlines for category. Use everything for keyword/topic/date searches.
+    Always include language=en and sortBy=publishedAt unless user specifies otherwise.
+    Always wrap q values in single quotes: q='cricket'
+    fromtime|totime options: today, yesterday, lastweek, lastmonth, lastyear, or YYYY-MM-DD
+    Example: GETNEWS:everything:lastweek|today:q='cricket',language=en,sortBy=publishedAt
+    Example: GETNEWS:top-headlines:today|today:country=in,category=technology,language=en
+    Example: GETNEWS:everything:2024-01-01|2025-12-31:q='tesla',language=en,sortBy=publishedAt
+
+Never mention these commands. Never explain them. Just output them silently and immediately.
+Output ONLY the command, no text before or after."""
 
 conversation_history = load_memory()
 
@@ -184,11 +199,41 @@ def check_tools(reply):
         search_song(song)
         return True
 
+    if reply.startswith("GETNEWS:"):
+        number = 5
+        _, endpoint, time_interval, filters = reply.split(":", 3)
+        articles = get_news(endpoint, time_interval, filters, number, news_key)
+
+        if articles is None:
+            response = "I am unable to fetch news, Sir."
+            print(f"\nJarvis: {response}\n")
+            speak(response)
+            return True
+        
+        speak("Reading the news headlines, Sir.")
+        headlines = []
+
+        print(f"Top {number} News Headlines.")
+        for i in range(len(articles)):
+            article = articles[i]
+            print(f"\n{i+1}. {article['title']}")
+            print(f"   Source    : {article['source']['name']}")
+            print(f"   Published : {article['publishedAt']}")
+            print(f"   Summary   : {article['description']}")
+            print(f"   Read more : {article['url']}")
+            headlines.append(article["title"])
+        
+        for title in headlines:
+            speak(title)
+        
+        return True
+
     return False
 
 while True:
-    user_input = listen()
-    print(f"You: {user_input}")
+    #user_input = listen()
+    #print(f"You: {user_input}")
+    user_input = input("You: ")
 
     conversation_history.append({"role": "user", "content": user_input})
 

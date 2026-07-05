@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import psutil
 import datetime
+from dateutil.relativedelta import relativedelta
 import urllib.parse
 import pyautogui
 
@@ -137,3 +138,40 @@ def find_movie(movie):
 
 def search_song(song):
     webbrowser.open(f"spotify:search:{song}")
+
+def _find_date(relation):
+    try:
+        datetime.datetime.strptime(relation, "%Y-%m-%d")
+        return relation
+    except ValueError:
+        pass
+
+    today = datetime.datetime.today()
+    if relation == "today":
+        date = today
+    elif relation == "yesterday":
+        date = today - relativedelta(days=1)
+    elif relation == "lastweek":
+        date = today - relativedelta(weeks=1)
+    elif relation == "lastmonth":
+        date = today - relativedelta(months=1)
+    elif relation == "lastyear":
+        date = today - relativedelta(years=1)
+    else:
+        date = today
+    
+    return date.strftime("%Y-%m-%d")
+
+def get_news(endpoint, time_interval, filters, number, news_key):
+    filters = filters.replace(",", "&")
+    from_time, to_time = time_interval.split("|", 1)
+    from_date = _find_date(from_time)
+    to_date = _find_date(to_time)
+    news_url = f"https://newsapi.org/v2/{endpoint}?from={from_date}&to={to_date}&{filters}&apiKey={news_key}"
+    news = requests.get(news_url)
+    news_data = news.json()
+
+    if not news_data["status"] == "ok":
+        return None
+    
+    return news_data["articles"][:number]

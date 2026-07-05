@@ -2,6 +2,8 @@ import whisper
 import sounddevice as sd
 import numpy as np
 import pyttsx3
+import threading
+import keyboard
 
 model = whisper.load_model("small")
 
