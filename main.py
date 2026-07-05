@@ -204,8 +204,13 @@ def check_tools(reply):
         _, endpoint, time_interval, filters = reply.split(":", 3)
         articles = get_news(endpoint, time_interval, filters, number, news_key)
 
-        if articles is None:
-            response = "I am unable to fetch news, Sir."
+        if articles == "error":
+            response = "Unable to fetch news, Sir."
+            print(f"\nJarvis: {response}\n")
+            speak(response)
+            return True
+        if articles == "noresults":
+            response = "No results found, Sir."
             print(f"\nJarvis: {response}\n")
             speak(response)
             return True
@@ -213,7 +218,7 @@ def check_tools(reply):
         speak("Reading the news headlines, Sir.")
         headlines = []
 
-        print(f"Top {number} News Headlines.")
+        print(f"Top Headlines.")
         for i in range(len(articles)):
             article = articles[i]
             print(f"\n{i+1}. {article['title']}")

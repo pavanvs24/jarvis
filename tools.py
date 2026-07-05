@@ -171,7 +171,10 @@ def get_news(endpoint, time_interval, filters, number, news_key):
     news = requests.get(news_url)
     news_data = news.json()
 
-    if not news_data["status"] == "ok":
-        return None
+    if not news_data["status"] == "error":
+        return "error"
+    
+    if news_data["totalResults"] == 0:
+        return "noresults"
     
     return news_data["articles"][:number]
