@@ -10,3 +10,15 @@ def load_memory():
 def save_memory(conversation_history):
     with open("memory.json", "w") as file:
         json.dump(conversation_history, file)
+
+def append_user(conversation_history, text):
+    conversation_history.append({
+        "role": "user",
+        "parts": [{"text": text}]
+    })
+
+def append_assistant(conversation_history, text):
+    conversation_history.append({
+        "role": "model",
+        "parts": [{"text": text}]
+    })

@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 import requests
-from memory import load_memory, save_memory
+from memory import load_memory, save_memory, append_user, append_assistant
 from tools import (
     search_song, find_movie, take_screenshot, 
     search_brave, get_weather, open_website, open_app, 
@@ -58,10 +58,7 @@ def check_tools(reply):
         sitename = reply.split(":", 1)[1].strip()
         response = f"Opening {sitename}"
 
-        conversation_history.append({
-            "role": "model",
-            "parts": [{"text": response}]
-        })
+        append_assistant(conversation_history, response)
         save_memory(conversation_history)
 
         print(f"\nJarvis: {response}\n")
@@ -77,10 +74,7 @@ def check_tools(reply):
         else:
             response = f"Could not find {appname}"
 
-        conversation_history.append({
-            "role": "model",
-            "parts": [{"text": response}]
-        })
+        append_assistant(conversation_history, response)
         save_memory(conversation_history)
 
         print(f"\nJarvis: {response}\n")
@@ -91,10 +85,7 @@ def check_tools(reply):
         city = reply.split(":", 1)[1].strip()
         weather_info = get_weather(city)
 
-        conversation_history.append({
-            "role": "model",
-            "parts": [{"text": weather_info}]
-        })
+        append_assistant(conversation_history, weather_info)
         save_memory(conversation_history)
 
         print(f"\nJarvis: {weather_info}\n")
@@ -107,10 +98,7 @@ def check_tools(reply):
 
         response = f"{task}, added to your notes, Sir."
 
-        conversation_history.append({
-            "role": "model",
-            "parts": [{"text": response}]
-        })
+        append_assistant(conversation_history, response)
         save_memory(conversation_history)
 
         print(f"\nJarvis: {response}\n")
@@ -127,10 +115,7 @@ def check_tools(reply):
             result = f"Listing your notes, Sir.\n\nNOTES.\n{notes}"
             response = "Listing your notes, Sir."
 
-        conversation_history.append({
-            "role": "model",
-            "parts": [{"text": response}]
-        })
+        append_assistant(conversation_history, response)
         save_memory(conversation_history)
 
         print(f"\nJarvis: {result}\n")
@@ -152,10 +137,7 @@ def check_tools(reply):
         else:
             response = f"{code} note deleted, Sir."
 
-        conversation_history.append({
-            "role": "model",
-            "parts": [{"text": response}]
-        })
+        append_assistant(conversation_history, response)
         save_memory(conversation_history)
 
         print(f"\nJarvis: {response}\n")
@@ -305,10 +287,7 @@ while True:
     #print(f"You: {user_input}")
     user_input = input("You: ")
 
-    conversation_history.append({
-        "role": "user",
-        "parts": [{"text": user_input}]
-    })
+    append_user(conversation_history, user_input)
 
     response = requests.post(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
@@ -339,10 +318,7 @@ while True:
     if check_tools(reply):
         continue
 
-    conversation_history.append({
-        "role": "model",
-        "parts": [{"text": reply}]
-    })
+    append_assistant(conversation_history, reply)
 
     save_memory(conversation_history)
 
