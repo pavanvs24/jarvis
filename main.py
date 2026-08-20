@@ -12,7 +12,7 @@ from voice import listen, speak
 
 load_dotenv()
 
-api_key = os.environ.get("GROQ_API_KEY")
+api_key = os.environ.get("GEMINI_API_KEY")
 news_key = os.environ.get("NEWS_API_KEY")
 
 system_prompt = """You are Jarvis, a helpful personal assistant. Respond naturally and helpfully to everything.
@@ -55,63 +55,90 @@ conversation_history = load_memory()
 
 def check_tools(reply):
     if reply.startswith("OPENWEBSITE:"):
-        sitename = reply.split(":")[1]
+        sitename = reply.split(":", 1)[1].strip()
         response = f"Opening {sitename}"
-        conversation_history.append({"role": "assistant", "content": response})
+
+        conversation_history.append({
+            "role": "model",
+            "parts": [{"text": response}]
+        })
         save_memory(conversation_history)
+
         print(f"\nJarvis: {response}\n")
         speak(response)
         open_website(sitename)
         return True
 
     if reply.startswith("OPENAPP:"):
-        appname = reply.split(":")[1]
+        appname = reply.split(":", 1)[1].strip()
+
         if open_app(appname):
             response = f"Opening {appname}"
         else:
             response = f"Could not find {appname}"
-        conversation_history.append({"role": "assistant", "content": response})
+
+        conversation_history.append({
+            "role": "model",
+            "parts": [{"text": response}]
+        })
         save_memory(conversation_history)
+
         print(f"\nJarvis: {response}\n")
         speak(response)
         return True
 
     if reply.startswith("WEATHER:"):
-        city = reply.split(":")[1]
+        city = reply.split(":", 1)[1].strip()
         weather_info = get_weather(city)
-        conversation_history.append({"role": "assistant", "content": weather_info})
+
+        conversation_history.append({
+            "role": "model",
+            "parts": [{"text": weather_info}]
+        })
         save_memory(conversation_history)
+
         print(f"\nJarvis: {weather_info}\n")
         speak(weather_info)
         return True
 
     if reply.startswith("REMEMBERNOTE:"):
-        task = reply.split(":")[1]
+        task = reply.split(":", 1)[1].strip()
         remember_note(task)
+
         response = f"{task}, added to your notes, Sir."
-        conversation_history.append({"role": "assistant", "content": response})
+
+        conversation_history.append({
+            "role": "model",
+            "parts": [{"text": response}]
+        })
         save_memory(conversation_history)
+
         print(f"\nJarvis: {response}\n")
         speak(response)
         return True
 
     if reply.startswith("READNOTES:"):
         notes = read_notes()
-        
+
         if notes.strip() == "":
-            response = say = "You have no notes, Sir."
+            response = "You have no notes, Sir."
+            result = response
         else:
             result = f"Listing your notes, Sir.\n\nNOTES.\n{notes}"
             response = "Listing your notes, Sir."
-        
-        conversation_history.append({"role": "assistant", "content": response})
+
+        conversation_history.append({
+            "role": "model",
+            "parts": [{"text": response}]
+        })
         save_memory(conversation_history)
+
         print(f"\nJarvis: {result}\n")
         speak(response)
         return True
 
     if reply.startswith("DELETENOTE:"):
-        note = reply.split(":")[1].lower().strip()
+        note = reply.split(":", 1)[1].lower().strip()
         code = delete_note(note)
 
         if code == False:
@@ -124,21 +151,38 @@ def check_tools(reply):
             response = f"{note} is an invalid note number, Sir."
         else:
             response = f"{code} note deleted, Sir."
-        
-        conversation_history.append({"role": "assistant", "content": response})
+
+        conversation_history.append({
+            "role": "model",
+            "parts": [{"text": response}]
+        })
         save_memory(conversation_history)
+
         print(f"\nJarvis: {response}\n")
-        speak(response)    
-        return True  
+        speak(response)
+        return True
 
     if reply.startswith("MONITORSYSTEM:"):
         system_info = monitor_system()
+
         cpu_percent = system_info["cpu_percent"]
-        ram_percent =  system_info["ram_percent"]
-        battery_percent =  f"{system_info["battery_percent"]}%" if system_info["battery_percent"] else "No Battery"
+        ram_percent = system_info["ram_percent"]
+        battery_percent = (
+            f"{system_info['battery_percent']}%"
+            if system_info["battery_percent"]
+            else "No Battery"
+        )
         charging = "Charging" if system_info["charging"] else "Not Charging"
         disk_usage_percent = system_info["disk_usage_percent"]
-        response = f"Monitoring System Info...\nCPU: {cpu_percent}%\nRAM: {ram_percent}%\nBattery: {battery_percent} {charging}\nDisk Usage: {disk_usage_percent}%"
+
+        response = (
+            f"Monitoring System Info...\n"
+            f"CPU: {cpu_percent}%\n"
+            f"RAM: {ram_percent}%\n"
+            f"Battery: {battery_percent} {charging}\n"
+            f"Disk Usage: {disk_usage_percent}%"
+        )
+
         print(f"\nJarvis: {response}\n")
         speak(response)
         return True
@@ -155,14 +199,16 @@ def check_tools(reply):
             response = f"{now['date']} | {now['time']}"
         else:
             return False
-    
+
         print(f"\nJarvis: {response}\n")
         speak(response)
         return True
 
     if reply.startswith("SEARCHBRAVE:"):
         query = reply.split(":", 1)[1].strip()
+
         response = f"Searching for {query}, Sir."
+
         print(f"\nJarvis: {response}\n")
         speak(response)
         search_brave(query)
@@ -170,7 +216,9 @@ def check_tools(reply):
 
     if reply.startswith("TAKESCREENSHOT:"):
         take_screenshot()
+
         response = "Screenshot Taken, Sir."
+
         print(f"\nJarvis: {response}\n")
         speak(response)
         return True
@@ -179,7 +227,7 @@ def check_tools(reply):
         movie = reply.split(":", 1)[1].strip()
         movie_path = find_movie(movie)
 
-        if movie_path == None:
+        if movie_path is None:
             response = f"Could not find the movie {movie}, Sir."
             print(f"\nJarvis: {response}\n")
             speak(response)
@@ -188,12 +236,14 @@ def check_tools(reply):
             print(f"\nJarvis: {response}\n")
             speak(response)
             os.startfile(movie_path)
-        
+
         return True
 
     if reply.startswith("PLAYSONG:"):
         song = reply.split(":", 1)[1].strip()
+
         response = f"Searching for {song} on Spotify, Sir."
+
         print(f"\nJarvis: {response}\n")
         speak(response)
         search_song(song)
@@ -201,36 +251,51 @@ def check_tools(reply):
 
     if reply.startswith("GETNEWS:"):
         number = 5
+
         _, endpoint, time_interval, filters = reply.split(":", 3)
-        articles = get_news(endpoint, time_interval, filters, number, news_key)
+
+        articles = get_news(
+            endpoint,
+            time_interval,
+            filters,
+            number,
+            news_key
+        )
 
         if articles == "error":
             response = "Unable to fetch news, Sir."
+
             print(f"\nJarvis: {response}\n")
             speak(response)
             return True
+
         if articles == "noresults":
             response = "No results found, Sir."
+
             print(f"\nJarvis: {response}\n")
             speak(response)
             return True
-        
+
         speak("Reading the news headlines, Sir.")
+
         headlines = []
 
-        print(f"Top Headlines.")
+        print("Top Headlines.")
+
         for i in range(len(articles)):
             article = articles[i]
-            print(f"\n{i+1}. {article['title']}")
+
+            print(f"\n{i + 1}. {article['title']}")
             print(f"   Source    : {article['source']['name']}")
             print(f"   Published : {article['publishedAt']}")
             print(f"   Summary   : {article['description']}")
             print(f"   Read more : {article['url']}")
+
             headlines.append(article["title"])
-        
+
         for title in headlines:
             speak(title)
-        
+
         return True
 
     return False
@@ -240,27 +305,45 @@ while True:
     #print(f"You: {user_input}")
     user_input = input("You: ")
 
-    conversation_history.append({"role": "user", "content": user_input})
+    conversation_history.append({
+        "role": "user",
+        "parts": [{"text": user_input}]
+    })
 
     response = requests.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        headers = {
-            "Authorization": f"Bearer {api_key}",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+        headers={
             "Content-Type": "application/json"
         },
-        json = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": [{"role": "system", "content": system_prompt}] + conversation_history
+        params={
+            "key": api_key
+        },
+        json={
+            "systemInstruction": {
+                "parts": [
+                    {"text": system_prompt}
+                ]
+            },
+            "contents": conversation_history
         }
     )
 
     data = response.json()
-    reply = data["choices"][0]["message"]["content"]
+
+    if "error" in data:
+        print(f"\nGemini Error: {data['error']['message']}\n")
+        continue
+
+    reply = data["candidates"][0]["content"]["parts"][0]["text"]
 
     if check_tools(reply):
         continue
 
-    conversation_history.append({"role": "assistant", "content": reply})
+    conversation_history.append({
+        "role": "model",
+        "parts": [{"text": reply}]
+    })
+
     save_memory(conversation_history)
 
     print(f"\nJarvis: {reply}\n")
