@@ -67,7 +67,7 @@ def read_notes():
             return file.read()
 
     except (FileNotFoundError):
-        return None
+        return ""
 
 def delete_note(note):
     try:
