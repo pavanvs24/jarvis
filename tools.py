@@ -125,14 +125,16 @@ def take_screenshot():
     filename = now.strftime("screenshot_%Y%m%d_%H%M%S.png")
     image.save(filename)
 
-def find_movie(movie):
+def play_movie(movie):
     folder = MEDIA_PATHS['movies']
     files = os.listdir(folder)
     match, score, _ = process.extractOne(movie, files)
     print(score)
     
     if score > 60:
-        return os.path.join(folder, match)
+        movie_path = os.path.join(folder, match)
+        os.startfile(movie_path)
+        return movie_path
     else:
         return None
 
