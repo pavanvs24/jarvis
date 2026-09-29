@@ -18,6 +18,7 @@ def listen():
 
 def speak(text):
     engine = pyttsx3.init()
+    text = text.replace("#", "").replace("*", "")
     engine.say(text)
     engine.runAndWait()
     engine.stop()

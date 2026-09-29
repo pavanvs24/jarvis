@@ -1,9 +1,13 @@
-from brain import get_response
+from brain import get_reply, set_provider, get_provider, switch_provider, quick_start
 from memory import load_memory, save_memory, append_user, append_assistant
 from tool_handlers import check_tools
 from voice import listen, speak
 
 conversation_history = load_memory()
+
+if not set_provider(conversation_history["provider"]):
+    conversation_history = quick_start()
+    save_memory(conversation_history)
 
 while True:
     #user_input = listen()
@@ -11,9 +15,43 @@ while True:
     user_input = input("You: ")
     append_user(conversation_history, user_input)
 
-    reply = get_response(conversation_history)
+    if user_input.startswith("GETPROVIDER:"):
+        arg = user_input.split(":", 1)[1].strip().lower()
+        result = get_provider(arg)
+        if not result:
+            reply = "Invalid Arguement, Sir."
+            print(f"\nJarvis: {reply}\n")
+            speak(reply)
+            continue
+        reply = f"The current provider is {result}, Sir."
+        print(f"\nJarvis: {reply}\n")
+        speak(reply)
+        continue
+
+    if user_input.startswith("SWITCHPROVIDER:"):
+        new_provider = user_input.split(":", 1)[1].strip().lower()
+        new_history = switch_provider(new_provider, conversation_history)
+        if not new_history:
+            reply = "Provider doesn't exist, Sir."
+            print(f"\nJarvis: {reply}\n")
+            speak(reply)
+            continue
+        conversation_history = new_history
+        save_memory(conversation_history)
+        reply = f"{new_provider} is active, Sir."
+        print(f"\nJarvis: {reply}\n")
+        speak(reply)
+        continue
+    
+    try:
+        reply = get_reply(conversation_history["history"])
+    except Exception as error:
+        print(f"\nJarvis: An Error occured, Sir\n\n{error}\n")
+        speak("An Error occured, Sir.")
+        continue
 
     is_tool, tool_reply, tool_log = check_tools(reply)
+
     if is_tool:
         if tool_log:
             append_assistant(conversation_history, tool_log)

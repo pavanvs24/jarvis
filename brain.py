@@ -1,10 +1,16 @@
 import os
 import requests
 from dotenv import load_dotenv
+from memory import to_internal, to_provider
+from voice import speak
 
 load_dotenv()
 
-api_key = os.environ.get("GEMINI_API_KEY")
+provider_names = ["gemini", "grok"]
+PROVIDER = provider_names[0]
+
+gemini_api_key = os.environ.get("GEMINI_API_KEY")
+grok_api_key = os.environ.get("GROQ_API_KEY")
 
 system_prompt = """You are Jarvis, a helpful personal assistant. Respond naturally and helpfully to everything.
 
@@ -42,29 +48,85 @@ GETNEWS:endpoint:fromtime|totime:filters    → user wants news. Output ONLY the
 Never mention these commands. Never explain them. Just output them silently and immediately.
 Output ONLY the command, no text before or after."""
 
-def get_response(conversation_history):
+def set_provider(provider):
+    global PROVIDER
+    if provider not in provider_names:
+        return False
+
+    PROVIDER = provider
+    return True
+
+def quick_start():
+    PROVIDER = provider_names[0]
+    return {"provider":PROVIDER, "history":[]}
+
+def get_provider(arg):
+    if arg == "current":
+        return PROVIDER
+    return False
+
+def switch_provider(new_provider, conversation_history):
+    global PROVIDER    
+    if new_provider not in provider_names:
+        return False
+    
+    internal_history = to_internal(conversation_history, PROVIDER)
+    PROVIDER = new_provider
+    new_history = to_provider(internal_history)
+    return new_history
+
+def gemini_reply(conversation_history):
     response = requests.post(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
-            headers={
-                "Content-Type": "application/json"
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+        headers={
+            "Content-Type": "application/json"
+        },
+        params={
+            "key": gemini_api_key
+        },
+        json={
+            "systemInstruction": {
+                "parts": [
+                    {"text": system_prompt}
+                ]
             },
-            params={
-                "key": api_key
-            },
-            json={
-                "systemInstruction": {
-                    "parts": [
-                        {"text": system_prompt}
-                    ]
-                },
-                "contents": conversation_history
-            }
-        )
+            "contents": conversation_history
+        }
+    )
+
     data = response.json()
 
     if "error" in data:
-        print(f"\nGemini Error: {data['error']['message']}\n")
-        return
+        raise Exception(data['error']['message'])
     
     reply = data["candidates"][0]["content"]["parts"][0]["text"]
     return reply
+
+def grok_reply(conversation_history):
+    response = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {grok_api_key}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "openai/gpt-oss-120b",
+            "messages": [
+                {"role": "system", "content": system_prompt}
+            ] + conversation_history
+        }
+    )
+
+    data = response.json()
+
+    if "error" in data:
+        raise Exception(data['error']['message'])
+
+    reply = data["choices"][0]["message"]["content"]
+    return reply
+
+def get_reply(conversation_history):
+    if PROVIDER == "gemini":
+        return gemini_reply(conversation_history)
+    elif PROVIDER == "grok":
+        return grok_reply(conversation_history)
