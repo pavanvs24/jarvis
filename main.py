@@ -11,6 +11,10 @@ while True:
         continue
     
     reply = handle_message(user_input)
-    if reply:
-        print(f"\nJarvis: {reply}\n")
-        speak(reply)
+    if isinstance(reply, str):
+        display = speech = reply
+    else:
+        display, speech = reply
+
+    print(f"\nJarvis: {display}\n")
+    speak(speech)

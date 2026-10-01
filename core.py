@@ -35,15 +35,12 @@ def handle_message(user_input):
         conversation_history["history"].pop()
         return f"An Error occured, Sir.\n\n{error}"
 
-    is_tool, tool_reply, tool_log = check_tools(reply)
+    is_tool, display, speech = check_tools(reply)
 
     if is_tool:
-        if tool_log:
-            append_assistant(conversation_history, tool_log)
-            save_memory(conversation_history)
-        else:
-            conversation_history["history"].pop()
-        return tool_reply or ""
+        append_assistant(conversation_history, reply.strip())
+        save_memory(conversation_history)
+        return display, speech
 
     append_assistant(conversation_history, reply)
     save_memory(conversation_history)

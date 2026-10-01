@@ -53,7 +53,8 @@ def _run(text):
     except Exception as e:
         print(f"[TTS error] {e}")
     finally:
-        stream.close()
+        if stream is not None:
+            stream.close()
 
 def speak(text, block=False):
     global _thread

@@ -1,192 +1,158 @@
-from tools import (
-    search_song, play_movie, take_screenshot, 
-    search_brave, get_weather, open_website, open_app, 
-    remember_note, read_notes, delete_note, 
-    monitor_system, get_datetime, get_news
-)
 import os
 from dotenv import load_dotenv
-from voice import speak
+from tools import (
+    search_song, play_movie, take_screenshot,
+    search_brave, get_weather, open_website, open_app,
+    remember_note, read_notes, delete_note,
+    monitor_system, get_datetime, get_news
+)
 
 load_dotenv()
 
 news_key = os.environ.get("NEWS_API_KEY")
+NEWS_COUNT = 5
+
+# Every handler returns either:
+#   "text"                -> shown and spoken as-is
+#   (display, speech)     -> full text for the screen, shorter text for voice
+
+
+def _arg(command):
+    return command.split(":", 1)[1].strip()
+
 
 def handle_monitor_system(command):
-    system_info = monitor_system()
+    info = monitor_system()
 
-    cpu_percent = system_info["cpu_percent"]
-    ram_percent = system_info["ram_percent"]
-    battery_percent = (
-        f"{system_info['battery_percent']}%"
-        if system_info["battery_percent"]
-        else "No Battery"
+    if info["battery_percent"] is not None:
+        state = "Charging" if info["charging"] else "Not Charging"
+        battery = f"{info['battery_percent']}% {state}"
+    else:
+        battery = "No Battery"
+
+    text = (
+        "Monitoring System Info, Sir...\n"
+        f"CPU: {info['cpu_percent']}%\n"
+        f"RAM: {info['ram_percent']}%\n"
+        f"Battery: {battery}\n"
+        f"Disk Usage: {info['disk_usage_percent']}%"
     )
-    charging = "Charging" if system_info["charging"] else "Not Charging"
-    disk_usage_percent = system_info["disk_usage_percent"]
+    return text
 
-    response = (
-        f"Monitoring System Info, Sir...\n"
-        f"CPU: {cpu_percent}%\n"
-        f"RAM: {ram_percent}%\n"
-        f"Battery: {battery_percent} {charging}\n"
-        f"Disk Usage: {disk_usage_percent}%"
-    )
-    memory = None
-
-    return True, response, memory
 
 def handle_datetime(command):
-    check = command.split(":", 1)[1].strip()
+    check = _arg(command)
     now = get_datetime()
 
     if check == "date":
-        response = f"{now['date']}"
-    elif check == "time":
-        response = f"{now['time']}"
-    elif check == "datetime":
-        response = f"{now['date']} | {now['time']}"
-    else:
-        return False, None, None
+        return now["date"]
+    if check == "time":
+        return now["time"]
+    if check == "datetime":
+        return f"{now['date']} | {now['time']}"
+    return "I didn't understand that date or time request, Sir."
 
-    memory = None
-
-    return True, response, memory
 
 def handle_open_website(command):
-    sitename = command.split(":", 1)[1].strip()
-    response = f"Opening {sitename}, Sir."
-    memory = None
+    sitename = _arg(command)
     open_website(sitename)
-    return True, response, memory
+    return f"Opening {sitename}, Sir."
+
 
 def handle_open_app(command):
-    appname = command.split(":", 1)[1].strip()
-
+    appname = _arg(command)
     if open_app(appname):
-        response = f"Opening {appname}, Sir."
-    else:
-        response = f"Could not find {appname}, Sir."
+        return f"Opening {appname}, Sir."
+    return f"Could not find {appname}, Sir."
 
-    memory = None
-    return True, response, memory
 
 def handle_search_brave(command):
-    query = command.split(":", 1)[1].strip()
-
-    response = f"Searching for {query}, Sir."
-    memory = None
+    query = _arg(command)
     search_brave(query)
-    return True, response, memory
+    return f"Searching for {query}, Sir."
+
 
 def handle_get_weather(command):
-    city = command.split(":", 1)[1].strip()
-    weather_info = get_weather(city)
-    response = weather_info
-    memory = None
-    return True, response, memory
+    return get_weather(_arg(command))
+
 
 def handle_take_screenshot(command):
-    take_screenshot()
-    response = "Screenshot Taken, Sir."
-    memory = None
-    return True, response, memory
+    filename = take_screenshot()
+    return f"Screenshot taken, Sir. Saved as {filename}", "Screenshot taken, Sir."
+
 
 def handle_remember_note(command):
-    task = command.split(":", 1)[1].strip()
+    task = _arg(command)
     remember_note(task)
-    response = f"{task}, added to your notes, Sir."
-    memory = None
-    return True, response, memory
+    return f"{task}, added to your notes, Sir."
+
 
 def handle_read_notes(command):
     notes = read_notes()
+    if not notes:
+        return "You have no notes, Sir."
 
-    if notes.strip() == "":
-        response = "You have no notes, Sir."
-    else:
-        response = None
-        result = f"Listing your notes, Sir.\n\nNOTES.\n{notes}"
-        print(result)
-        speak("Listing your notes, Sir.")
+    display = "NOTES.\n" + "\n".join(f"{i}. {note}" for i, note in enumerate(notes, 1))
+    return display, "Here are your notes, Sir."
 
-    memory = None
-    return True, response, memory
 
 def handle_delete_note(command):
-    note = command.split(":", 1)[1].lower().strip()
+    note = _arg(command).lower()
     code = delete_note(note)
 
-    if code == False:
-        response = "An unknown error occured, Sir."
-    elif code == "ALL":
-        response = "All notes cleared, Sir."
-    elif code == "NoNotes":
-        response = "You have no Notes, Sir."
-    elif code == "InvalidNoteNumber":
-        response = f"{note} is an invalid note number, Sir."
-    else:
-        response = f"{code} note deleted, Sir."
+    if code == "ALL":
+        return "All notes cleared, Sir."
+    if code == "NoNotes":
+        return "You have no notes, Sir."
+    if code == "InvalidNoteNumber":
+        return f"{note} is an invalid note number, Sir."
+    return f"Deleted note: {code}"
 
-    memory = None
-    return True, response, memory
 
 def handle_play_movie(command):
-    movie = command.split(":", 1)[1].strip()
-    movie_path = play_movie(movie)
+    movie = _arg(command)
+    if play_movie(movie) is None:
+        return f"Could not find the movie {movie}, Sir."
+    return f"Playing Movie: {movie}, Sir."
 
-    if movie_path is None:
-        response = f"Could not find the movie {movie}, Sir."
-    else:
-        response = f"Playing Movie: {movie}, Sir."
-
-    memory = None
-    return True, response, memory
 
 def handle_search_song(command):
-    song = command.split(":", 1)[1].strip()
-    response = f"Searching for {song} on Spotify, Sir."
-    memory = None
+    song = _arg(command)
     search_song(song)
-    return True, response, memory
+    return f"Searching for {song} on Spotify, Sir."
+
 
 def handle_get_news(command):
-    number = 5
-    _, endpoint, time_interval, filters = command.split(":", 3)
-    memory = None
+    parts = command.split(":", 3)
+    if len(parts) < 4:
+        return "I couldn't understand that news request, Sir."
+    _, endpoint, time_interval, filters = parts
 
-    articles = get_news(
-        endpoint,
-        time_interval,
-        filters,
-        number,
-        news_key
-    )
+    articles = get_news(endpoint, time_interval, filters, NEWS_COUNT, news_key)
 
     if articles == "error":
-        response = "Unable to fetch news, Sir."
-        return True, response, memory
-    
+        return "Unable to fetch news, Sir."
     if articles == "noresults":
-        response = "No results found, Sir."
-        return True, response, memory
+        return "No results found, Sir."
 
-    headlines = []
-    print("Top Headlines.")
-    speak("Reading the news headlines, Sir.")
-    for i in range(len(articles)):
-        article = articles[i]
-        print(f"\n{i + 1}. {article['title']}")
-        print(f"   Source    : {article['source']['name']}")
-        print(f"   Published : {article['publishedAt']}")
-        print(f"   Summary   : {article['description']}")
-        print(f"   Read more : {article['url']}")
-        headlines.append(article["title"])
+    lines = []
+    titles = []
+    for i, article in enumerate(articles, 1):
+        title = article.get("title") or "Untitled"
+        source = (article.get("source") or {}).get("name", "Unknown")
+        lines.append(
+            f"{i}. {title}\n"
+            f"   Source    : {source}\n"
+            f"   Published : {article.get('publishedAt')}\n"
+            f"   Summary   : {article.get('description') or 'No summary'}\n"
+            f"   Read more : {article.get('url')}"
+        )
+        titles.append(title.rsplit(" - ", 1)[0])  # drop the " - Source" suffix
 
-    for title in headlines:
-        speak(title)
+    display = "Top Headlines.\n\n" + "\n\n".join(lines)
+    speech = "Here are the top headlines, Sir. " + ". ".join(titles)
+    return display, speech
 
-    return True, None, memory
 
 TOOLS = {
     "MONITORSYSTEM:": handle_monitor_system,
@@ -201,12 +167,26 @@ TOOLS = {
     "DELETENOTE:": handle_delete_note,
     "PLAYMOVIE:": handle_play_movie,
     "PLAYSONG:": handle_search_song,
-    "GETNEWS:": handle_get_news
+    "GETNEWS:": handle_get_news,
 }
 
+
 def check_tools(command):
+    """Returns (is_tool, display, speech)."""
+    command = command.strip()
+
     for prefix, handler in TOOLS.items():
         if command.startswith(prefix):
-            return handler(command)
-    
+            try:
+                result = handler(command)
+            except Exception as error:
+                return True, f"That tool failed, Sir.\n\n{error}", "That tool failed, Sir.", command
+
+            if isinstance(result, str):
+                display = speech = result
+            else:
+                display, speech = result
+
+            return True, display, speech
+
     return False, None, None

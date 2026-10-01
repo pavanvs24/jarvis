@@ -7,3 +7,4 @@ config.py
 jarvis.code-workspace
 voices/
 *.pyc
+screenshot_*.png
