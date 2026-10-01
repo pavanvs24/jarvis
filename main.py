@@ -1,7 +1,7 @@
 from brain import get_reply, set_provider, get_provider, switch_provider, quick_start
 from memory import load_memory, save_memory, append_user, append_assistant
 from tool_handlers import check_tools
-from voice import listen, speak
+from voice import listen, speak, stop_speaking
 
 conversation_history = load_memory()
 
@@ -9,11 +9,16 @@ if not set_provider(conversation_history["provider"]):
     conversation_history = quick_start()
     save_memory(conversation_history)
 
+speak("All Systems Optimal and Ready for Action, Sir. What we up to today ?")
+
 while True:
     #user_input = listen()
     #print(f"You: {user_input}")
     user_input = input("You: ")
-    append_user(conversation_history, user_input)
+    stop_speaking()
+
+    if not user_input.strip():
+        continue
 
     if user_input.startswith("GETPROVIDER:"):
         arg = user_input.split(":", 1)[1].strip().lower()
@@ -42,10 +47,13 @@ while True:
         print(f"\nJarvis: {reply}\n")
         speak(reply)
         continue
+
+    append_user(conversation_history, user_input)
     
     try:
         reply = get_reply(conversation_history["history"])
     except Exception as error:
+        conversation_history["history"].pop()
         print(f"\nJarvis: An Error occured, Sir\n\n{error}\n")
         speak("An Error occured, Sir.")
         continue
@@ -56,6 +64,9 @@ while True:
         if tool_log:
             append_assistant(conversation_history, tool_log)
             save_memory(conversation_history)
+        else:
+            conversation_history["history"].pop()
+        
         if tool_reply:
             print(f"\nJarvis: {tool_reply}\n")
             speak(tool_reply)

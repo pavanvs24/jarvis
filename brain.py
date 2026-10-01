@@ -57,6 +57,7 @@ def set_provider(provider):
     return True
 
 def quick_start():
+    global PROVIDER
     PROVIDER = provider_names[0]
     return {"provider":PROVIDER, "history":[]}
 

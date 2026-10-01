@@ -5,4 +5,5 @@ notes.txt
 memory.json
 config.py
 jarvis.code-workspace
-model_test.py
+voices/
+*.pyc
