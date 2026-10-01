@@ -92,7 +92,8 @@ def gemini_reply(conversation_history):
                 ]
             },
             "contents": conversation_history
-        }
+        },
+        timeout=15
     )
 
     data = response.json()
@@ -115,7 +116,8 @@ def grok_reply(conversation_history):
             "messages": [
                 {"role": "system", "content": system_prompt}
             ] + conversation_history
-        }
+        },
+        timeout=15
     )
 
     data = response.json()
