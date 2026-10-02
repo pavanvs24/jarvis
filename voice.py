@@ -1,12 +1,7 @@
 import os
 import threading
-import whisper
-import keyboard
 import sounddevice as sd
-import numpy as np
 from piper import PiperVoice
-
-model = whisper.load_model("small")
 
 VOICE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "voices", "en_US-lessac-medium.onnx")
 
@@ -14,14 +9,6 @@ _voice = None
 _thread = None
 _stop = threading.Event()
 
-def listen():
-    print("[Listening for 10 seconds...]")
-    recording = sd.rec(int(10 * 16000), samplerate=16000, channels=1, dtype='float32')
-    sd.wait()
-    print("[Processing...]")
-    audio = np.squeeze(recording)
-    result = model.transcribe(audio)
-    return result["text"]
 
 def _get_voice():
     global _voice

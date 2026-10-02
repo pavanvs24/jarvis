@@ -2,7 +2,6 @@ import os
 import requests
 from dotenv import load_dotenv
 from memory import to_internal, to_provider
-from voice import speak
 
 load_dotenv()
 

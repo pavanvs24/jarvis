@@ -1,5 +1,5 @@
 from core import handle_message
-from voice import listen, speak, stop_speaking
+from voice import speak, stop_speaking
 
 speak("All Systems Optimal and Ready for Action, Sir. What we up to today ?")
 
